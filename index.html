@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teeth and Digestion Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: friendly Year 4 classroom, big and bold enough for the board
+   IDEA: a set of game cards from the science cupboard, one per topic
+   PICTURE: each game is the picture: tooth cross-section and body diagram drawn in SVG
+   COLOUR and TYPE: Lambrook Science palette, cream ground, sky-blue/indigo/plum rotation, amber accents; Fredoka + Nunito
+   LAYOUT: title strip, wrapping game tabs, one game panel at a time */
+:root{color-scheme:light dark;
+--bg:light-dark(#FFFDF7,#10202f);--ink:light-dark(#1C3D5F,#F2EEE3);--mut:light-dark(#7B93A8,#9fb3c6);--card:light-dark(#ffffff,#18304a);
+--sky:#1C7EA8;--skyT:light-dark(#E1F0F7,#16384b);--ind:#3D5FA8;--indT:light-dark(#E4E9F7,#1d2c50);
+--amb:#E8A33D;--ambT:light-dark(#FCF0DC,#3d3018);--plum:#9C4F96;--plumT:light-dark(#F5E8F4,#3a2338);
+--rust:#D2603A;--rustT:light-dark(#FBE7DE,#40261c);--em:#3F9142;--emT:light-dark(#E3F3E4,#1c3a1f);
+--red:#E05252;--redT:light-dark(#fbe1e1,#4a1f1f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Nunito,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Fredoka,Nunito,sans-serif;font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,46px)}h2{font-size:clamp(24px,3.4vw,32px)}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px);max-width:1240px;margin:0 auto}
+header{background:var(--skyT);border-bottom:2px solid var(--sky)}
+header .band{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-bottom:20px}
+header p{margin:6px 0 0;color:var(--mut);font-size:16px}
+.total{font-family:Fredoka,Nunito,sans-serif;font-size:20px;background:var(--ambT);border:2px solid var(--amb);border-radius:999px;padding:8px 18px;white-space:nowrap}
+nav{display:flex;flex-wrap:wrap;gap:10px;padding-top:18px}
+nav button{--c:var(--sky);--t:var(--skyT)}
+nav button:nth-child(3n+2){--c:var(--ind);--t:var(--indT)}nav button:nth-child(3n+3){--c:var(--plum);--t:var(--plumT)}
+button{font:inherit;font-weight:700;color:var(--ink);cursor:pointer;min-height:44px;border-radius:14px}
+button:focus-visible{outline:3px solid var(--amb);outline-offset:2px}
+nav button{background:var(--t);border:2px solid var(--c);padding:6px 16px;border-radius:999px}
+nav button[aria-selected=true]{background:var(--c);color:#fff}
+nav button .tk{margin-left:6px}
+.panel{display:none}.panel.on{display:block}
+.intro{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.how{color:var(--mut);margin:4px 0 18px;max-width:70ch}
+.score{font-family:Fredoka,Nunito,sans-serif;font-size:19px;white-space:nowrap}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:14px 22px}
+.row3{grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) minmax(0,.9fr)}
+.col{display:flex;flex-direction:column;gap:10px}
+.chip{background:var(--card);border:2px solid var(--c,var(--sky));padding:10px 14px;text-align:left;transition:transform .15s}
+.chip.sel{background:var(--ambT);border-color:var(--amb);transform:scale(1.02)}
+.chip.done{background:var(--emT);border-color:var(--em);cursor:default}
+.chip.done::after{content:" ✓";color:var(--em)}
+.bad{animation:shake .4s;border-color:var(--red)!important;background:var(--redT)!important}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){.bad{animation:none}.chip{transition:none}}
+.term{font-family:Fredoka,Nunito,sans-serif;font-size:20px;font-weight:600;--c:var(--ind)}
+.def{--c:var(--sky)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.go{background:var(--amb);border:2px solid var(--amb);color:#1C3D5F;padding:8px 22px}
+.ghost{background:transparent;border:2px solid var(--mut);padding:8px 18px}
+.msg{margin-top:14px;padding:12px 16px;border-radius:16px;background:var(--emT);border:2px solid var(--em);display:none}
+.msg.show{display:block}.msg.warn{background:var(--ambT);border-color:var(--amb)}
+/* sorting */
+.pool{display:flex;flex-wrap:wrap;gap:10px;min-height:56px;padding:12px;border:2px dashed var(--mut);border-radius:18px;margin-bottom:16px}
+.pool .chip{font-weight:800}
+.bins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.bin{border:2px solid var(--c);background:var(--t);border-radius:18px;padding:12px;min-height:180px;display:flex;flex-direction:column;gap:8px;text-align:left;align-items:stretch;font-weight:500}
+.bin h3{font-size:22px}.bin small{color:var(--mut);font-size:14px}
+.bin .in{display:flex;flex-wrap:wrap;gap:6px}
+.bin .in span{background:var(--card);border:1.5px solid var(--c);border-radius:999px;padding:3px 12px;font-weight:700;font-size:15px}
+.bin .fact{display:none;font-size:15px;border-top:1.5px solid var(--c);padding-top:8px}.bin.full .fact{display:block}
+/* diagrams */
+.fig{background:var(--card);border:2px solid var(--sky);border-radius:20px;padding:10px}
+.fig svg{width:100%;height:auto;display:block;max-height:520px}
+.dot{cursor:pointer}.dot circle{fill:var(--amb);stroke:#1C3D5F;stroke-width:2}
+.dot text{font:700 15px Nunito,sans-serif;fill:#1C3D5F;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.dot.sel circle{fill:#fff;stroke:var(--amb);stroke-width:4}
+.dot.done circle{fill:var(--em)}.dot.done text{fill:#fff}
+.dot.badd circle{fill:var(--red)}
+.organ{transition:opacity .2s}
+svg.has-hl .organ:not(.hl){opacity:.3}
+.organ.hl{filter:drop-shadow(0 0 5px #E8A33D)}
+/* ordering */
+.order{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;counter-reset:n}
+.order li{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ind);border-radius:16px;padding:6px 8px 6px 6px}
+.order li::before{counter-increment:n;content:counter(n);flex:none;width:36px;height:36px;border-radius:50%;background:var(--amb);color:#1C3D5F;font:600 18px Fredoka,Nunito,sans-serif;display:grid;place-items:center}
+.order li span{flex:1}
+.order li button{width:44px;background:var(--indT);border:2px solid var(--ind);font-size:18px;flex:none}
+.order li.ok{border-color:var(--em);background:var(--emT)}.order li.no{border-color:var(--red);background:var(--redT)}
+/* quiz */
+.qcard{background:var(--plumT);border:2px solid var(--plum);border-radius:20px;padding:20px;max-width:820px}
+.qn{color:var(--mut);font-weight:700}
+.qcard h3{font-size:clamp(22px,3vw,28px);margin:6px 0 16px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opts button{background:var(--card);border:2px solid var(--plum);padding:12px 14px;text-align:left;font-size:18px}
+.opts button.right{background:var(--emT);border-color:var(--em)}.opts button.wrong{background:var(--redT);border-color:var(--red)}
+.why{margin-top:14px;font-size:16px}
+footer{color:var(--mut);font-size:14px;text-align:center;padding:10px 16px 28px}
+@media(max-width:760px){.row,.row3{grid-template-columns:minmax(0,1fr)}.row3 .fig{order:-1;max-width:320px}.bins{grid-template-columns:minmax(0,1fr)}.opts{grid-template-columns:minmax(0,1fr)}.bin{min-height:0}}
+</style>
+</head>
+<body>
+<header><div class="band">
+  <div><h1>Teeth &amp; Digestion: Revision Games</h1><p>Year 4 Science · seven quick games to play on the board or on your own</p></div>
+  <div class="total" id="total">Stars: 0</div>
+  <nav id="tabs" role="tablist" style="flex-basis:100%"></nav>
+</div></header>
+
+<main class="band">
+
+<section class="panel" id="p-teeth">
+  <div class="intro"><h2>Tooth Match</h2><span class="score" id="s-teeth"></span></div>
+  <p class="how">Click a type of tooth, then click the job it does.</p>
+  <div class="row"><div class="col" id="teeth-l"></div><div class="col" id="teeth-r"></div></div>
+  <div class="msg" id="m-teeth"></div>
+  <div class="btns"><button class="ghost" data-reset="teeth">Play again</button></div>
+</section>
+
+<section class="panel" id="p-sort">
+  <div class="intro"><h2>Who Eats What?</h2><span class="score" id="s-sort"></span></div>
+  <p class="how">Click an animal, then click the group it belongs to. Fill a group to unlock its teeth fact.</p>
+  <div class="pool" id="pool"></div>
+  <div class="bins" id="bins"></div>
+  <div class="msg" id="m-sort"></div>
+  <div class="btns"><button class="ghost" data-reset="sort">Play again</button></div>
+</section>
+
+<section class="panel" id="p-label">
+  <div class="intro"><h2>Label the Tooth</h2><span class="score" id="s-label"></span></div>
+  <p class="how">Click a word, then click the numbered spot it belongs to. Spots 6 and 7 point at the brackets on the right.</p>
+  <div class="row">
+    <div class="col" id="label-words"></div>
+    <div class="fig"><svg id="tooth" viewBox="0 0 420 460" role="img" aria-label="Cross-section of a molar tooth in the gum and jawbone">
+      <rect x="0" y="262" width="420" height="198" fill="#E9DCC3"/>
+      <g fill="#D8C7A6"><circle cx="40" cy="320" r="6"/><circle cx="70" cy="380" r="4"/><circle cx="30" cy="420" r="5"/><circle cx="330" cy="330" r="5"/><circle cx="360" cy="400" r="6"/><circle cx="310" cy="430" r="4"/></g>
+      <path d="M90,70 Q90,30 140,35 Q170,55 200,40 Q230,55 260,35 Q310,30 310,70 L305,200 Q300,230 290,260 L275,420 Q265,435 250,420 L225,270 Q200,255 175,270 L150,420 Q135,435 125,420 L110,260 Q100,230 95,200 Z" fill="#EFE6CF" stroke="#8a7a5a" stroke-width="2"/>
+      <path d="M90,70 Q90,30 140,35 Q170,55 200,40 Q230,55 260,35 Q310,30 310,70 L305,200 L95,200 Z" fill="#ffffff" stroke="#8a7a5a" stroke-width="2"/>
+      <path d="M110,85 Q112,58 145,60 Q172,75 200,62 Q228,75 255,60 Q288,58 290,85 L286,200 Q282,232 272,258 L262,405 Q255,412 250,405 L232,262 Q200,242 168,262 L150,405 Q145,412 138,405 L128,258 Q118,232 114,200 Z" fill="#F6E3A8" stroke="#b9a05a" stroke-width="1.5"/>
+      <path d="M160,110 Q200,95 240,110 L245,200 Q240,235 230,250 L245,390 L238,392 L218,262 Q200,252 182,262 L162,392 L155,390 L170,250 Q160,235 155,200 Z" fill="#F2A7A0" stroke="#c0605a" stroke-width="1.5"/>
+      <path d="M190,120 L188,200 L178,260 L160,388 M210,120 L212,200 L222,260 L240,388" fill="none" stroke="#C0392B" stroke-width="3"/>
+      <path d="M198,125 L196,200 L184,262 L166,386 M204,125 L205,200 L216,262 L234,386" fill="none" stroke="#2E5AA8" stroke-width="2.5"/>
+      <path d="M0,195 Q60,185 100,210 L112,275 L0,275 Z" fill="#E88FA0" stroke="#b8566a" stroke-width="1.5"/>
+      <path d="M420,195 Q345,185 300,210 L288,275 L420,275 Z" fill="#E88FA0" stroke="#b8566a" stroke-width="1.5"/>
+      <path d="M392,36 L402,36 L402,198 L392,198 M392,206 L402,206 L402,430 L392,430" fill="none" stroke="#1C3D5F" stroke-width="3"/>
+      <g id="spots"></g>
+    </svg></div>
+  </div>
+  <div class="msg" id="m-label"></div>
+  <div class="btns"><button class="ghost" data-reset="label">Play again</button></div>
+</section>
+
+<section class="panel" id="p-cavity">
+  <div class="intro"><h2>Cavity Countdown</h2><span class="score" id="s-cavity"></span></div>
+  <p class="how">These steps of tooth decay are jumbled. Use the arrows to put them in order, then check.</p>
+  <ol class="order" id="cavity-list"></ol>
+  <div class="msg" id="m-cavity"></div>
+  <div class="btns"><button class="go" id="cavity-check">Check my order</button><button class="ghost" data-reset="cavity">Shuffle again</button></div>
+</section>
+
+<section class="panel" id="p-gut">
+  <div class="intro"><h2>Digestive Match</h2><span class="score" id="s-gut"></span></div>
+  <p class="how">Click a part of the digestive system to see where it is, then click its job.</p>
+  <div class="row row3" id="gut-row">
+    <div class="col" id="gut-l"></div><div class="col" id="gut-r"></div>
+    <div class="fig"><svg id="body" viewBox="0 0 300 440" role="img" aria-label="Simple diagram of the digestive system">
+      <ellipse cx="150" cy="55" rx="46" ry="50" fill="none" stroke="#7B93A8" stroke-width="2.5"/>
+      <path d="M95,112 Q58,130 58,200 L64,405 Q150,432 236,405 L242,200 Q242,130 205,112" fill="none" stroke="#7B93A8" stroke-width="2.5"/>
+      <path class="organ" id="o-mouth" d="M128,76 Q150,96 172,76 Q150,86 128,76 Z" fill="#D2603A" stroke="#8f3a1f" stroke-width="2"/>
+      <path class="organ" id="o-oesophagus" d="M150,88 L150,172" stroke="#E8A33D" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path class="organ" id="o-stomach" d="M146,168 Q192,160 208,184 Q224,216 197,242 Q170,258 148,242 Q136,228 152,220 Q176,226 182,205 Q182,190 146,190 Z" fill="#C98BC4" stroke="#9C4F96" stroke-width="2.5"/>
+      <path class="organ" id="o-large" d="M120,368 Q92,368 92,344 L92,272 Q92,258 108,258 L192,258 Q208,258 208,272 L208,350 Q208,368 186,370 L156,372" stroke="#3F9142" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <g class="organ" id="o-small"><rect x="112" y="276" width="80" height="80" rx="26" fill="#FCF0DC" stroke="#E8A33D" stroke-width="2"/><path d="M122,292 Q140,280 150,294 Q162,308 180,292 M122,316 Q140,304 150,318 Q162,332 180,316 M122,340 Q140,328 150,342 Q162,354 180,340" fill="none" stroke="#E8A33D" stroke-width="5" stroke-linecap="round"/></g>
+      <path class="organ" id="o-rectum" d="M154,372 L151,402" stroke="#3D5FA8" stroke-width="13" stroke-linecap="round" fill="none"/>
+      <circle class="organ" id="o-anus" cx="150" cy="414" r="7" fill="#1C3D5F"/>
+    </svg></div>
+  </div>
+  <div class="msg" id="m-gut"></div>
+  <div class="btns"><button class="ghost" data-reset="gut">Play again</button></div>
+</section>
+
+<section class="panel" id="p-journey">
+  <div class="intro"><h2>Food's Journey</h2><span class="score" id="s-journey"></span></div>
+  <p class="how">A sandwich has just been bitten. Put the parts in the order the food travels through them, from start to finish.</p>
+  <ol class="order" id="journey-list"></ol>
+  <div class="msg" id="m-journey"></div>
+  <div class="btns"><button class="go" id="journey-check">Check my order</button><button class="ghost" data-reset="journey">Shuffle again</button></div>
+</section>
+
+<section class="panel" id="p-quiz">
+  <div class="intro"><h2>Quiz Show</h2><span class="score" id="s-quiz"></span></div>
+  <p class="how">Ten questions mixing everything from the topic. Pick an answer to see if you are right.</p>
+  <div class="qcard" id="qcard"></div>
+  <div class="btns"><button class="go" id="qnext" hidden>Next question</button><button class="ghost" data-reset="quiz">New quiz</button></div>
+</section>
+
+</main>
+<footer>Lambrook Science · Year 4 · Teeth and Digestion</footer>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const stars={};
+const award=(k,v)=>{stars[k]=v;const t=Object.values(stars).reduce((a,b)=>a+b,0);$('#total').textContent='Stars: '+t;const tb=document.querySelector('[data-tab="'+k+'"] .tk');if(tb)tb.textContent=v?'★'.repeat(v):''};
+const starsFor=(mistakes)=>mistakes===0?3:mistakes<=2?2:1;
+const flash=el=>{el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');setTimeout(()=>el.classList.remove('bad'),450)};
+const say=(id,html,warn)=>{const m=$('#m-'+id);m.innerHTML=html;m.className='msg show'+(warn?' warn':'')};
+const hush=id=>{$('#m-'+id).className='msg'};
+
+/* tabs */
+const games=[['teeth','Tooth Match'],['sort','Who Eats What?'],['label','Label the Tooth'],['cavity','Cavity Countdown'],['gut','Digestive Match'],['journey','Food\'s Journey'],['quiz','Quiz Show']];
+$('#tabs').innerHTML=games.map(([k,n])=>`<button role="tab" data-tab="${k}" aria-selected="false">${n}<span class="tk"></span></button>`).join('');
+const show=k=>{document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===k))};
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){show(b.dataset.tab);if(location.hash!=='#'+b.dataset.tab)history.replaceState(null,'','#'+b.dataset.tab)}});
+const fromHash=()=>{const h=location.hash.slice(1);show(games.some(g=>g[0]===h)?h:'teeth')};
+window.addEventListener('hashchange',fromHash);
+
+/* generic click-to-match */
+function matcher(key,L,R,pairs,onPick,done){
+  let sel={l:null,r:null},got=0,miss=0;
+  const lk=shuffle(Object.keys(pairs)),rk=shuffle(Object.keys(pairs));
+  L.innerHTML=lk.map(k=>`<button class="chip term" data-k="${k}">${k}</button>`).join('');
+  R.innerHTML=rk.map(k=>`<button class="chip def" data-k="${k}">${pairs[k]}</button>`).join('');
+  const sc=()=>$('#s-'+key).textContent=got+' / '+lk.length;sc();hush(key);
+  const clear=()=>{[sel.l,sel.r].forEach(b=>b&&b.classList.remove('sel'));sel={l:null,r:null}};
+  const tryit=()=>{if(!sel.l||!sel.r)return;
+    if(sel.l.dataset.k===sel.r.dataset.k){sel.l.classList.add('done');sel.r.classList.add('done');sel.l.disabled=sel.r.disabled=true;got++;clear();sc();
+      if(got===lk.length){const s=starsFor(miss);award(key,s);say(key,done+` You earned ${'★'.repeat(s)} (${miss} mistake${miss===1?'':'s'}).`)}}
+    else{miss++;flash(sel.l);flash(sel.r);clear()}};
+  const pick=side=>e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+    if(sel[side])sel[side].classList.remove('sel');sel[side]=b;b.classList.add('sel');if(side==='l'&&onPick)onPick(b.dataset.k);tryit()};
+  L.onclick=pick('l');R.onclick=pick('r');
+}
+
+/* 1 tooth types */
+const teeth={'Incisors':'Flat, chisel-shaped teeth at the front for biting and cutting food','Canines':'Sharp, pointed teeth for tearing and gripping food','Premolars':'Teeth with ridges, between canines and molars, for tearing and crushing','Molars':'Large, flat teeth at the back for chewing and grinding food'};
+const teethGame=()=>matcher('teeth',$('#teeth-l'),$('#teeth-r'),teeth,null,'Brilliant! You know all four types of teeth.');
+
+/* 2 sorting */
+const animals=[['Lion','c'],['Shark','c'],['Wolf','c'],['Tiger','c'],['Cow','h'],['Rabbit','h'],['Horse','h'],['Sheep','h'],['Human','o'],['Bear','o'],['Pig','o'],['Chimpanzee','o']];
+const groups={c:['Carnivores','eat only meat',"Big, sharp canines for gripping and tearing meat, and pointed back teeth for slicing.",'var(--rust)','var(--rustT)'],
+h:['Herbivores','eat only plants',"Sharp incisors to cut plants and wide, flat molars to grind them. Few or no canines.",'var(--em)','var(--emT)'],
+o:['Omnivores','eat plants and meat',"A mix of all teeth: incisors, canines, premolars and molars, so they can eat almost anything.",'var(--ind)','var(--indT)']};
+function sortGame(){
+  let sel=null,got=0,miss=0;hush('sort');
+  $('#pool').innerHTML=shuffle(animals).map(([n,g])=>`<button class="chip" data-g="${g}">${n}</button>`).join('');
+  $('#bins').innerHTML=Object.entries(groups).map(([k,[n,d,f,c,t]])=>`<button class="bin" data-g="${k}" style="--c:${c};--t:${t}"><h3>${n}</h3><small>${d}</small><div class="in"></div><div class="fact"><b>Their teeth:</b> ${f}</div></button>`).join('');
+  const sc=()=>$('#s-sort').textContent=got+' / '+animals.length;sc();
+  $('#pool').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(sel)sel.classList.remove('sel');sel=b;b.classList.add('sel')};
+  $('#bins').onclick=e=>{const bin=e.target.closest('.bin');if(!bin)return;if(!sel){say('sort','Pick an animal first, then its group.',true);return}
+    if(sel.dataset.g===bin.dataset.g){hush('sort');const s=document.createElement('span');s.textContent=sel.textContent;bin.querySelector('.in').append(s);sel.remove();sel=null;got++;sc();
+      if(bin.querySelectorAll('.in span').length===4)bin.classList.add('full');
+      if(got===animals.length){const st=starsFor(miss);award('sort',st);say('sort',`Every animal sorted! ${'★'.repeat(st)} Read the teeth facts in each group.`)}}
+    else{miss++;flash(sel);flash(bin)}};
+}
+
+/* 3 label tooth */
+const parts=[['Enamel',200,51,'The hard white outer layer. The hardest thing in your body.'],['Dentine',128,150,'The yellowish layer under the enamel.'],['Pulp',200,165,'The soft middle of the tooth.'],['Nerves and blood vessels',229,330,'Inside the pulp. Nerves feel pain; blood vessels bring food and oxygen.'],['Gum',345,240,'Soft pink tissue that holds the tooth in place.'],['Crown',402,117,'The part of the tooth you can see above the gum.'],['Root',402,318,'The part hidden in the jawbone that anchors the tooth.']];
+function labelGame(){
+  let sel=null,got=0,miss=0;hush('label');
+  const order=shuffle(parts.map((p,i)=>i));
+  $('#spots').innerHTML=parts.map(([n,x,y],i)=>`<g class="dot" data-i="${i}" tabindex="0" role="button" aria-label="Spot ${i+1}"><circle cx="${x}" cy="${y}" r="15"/><text x="${x}" y="${y}">${i+1}</text></g>`).join('');
+  $('#label-words').innerHTML=order.map(i=>`<button class="chip term" style="font-size:18px" data-i="${i}">${parts[i][0]}</button>`).join('');
+  const sc=()=>$('#s-label').textContent=got+' / '+parts.length;sc();
+  const place=(dot)=>{if(!sel)return;
+    if(sel.dataset.i===dot.dataset.i){dot.classList.add('done');sel.classList.remove('sel');sel.classList.add('done');sel.disabled=true;sel.textContent=(+sel.dataset.i+1)+' · '+parts[sel.dataset.i][0];say('label','<b>'+parts[sel.dataset.i][0]+':</b> '+parts[sel.dataset.i][3]);sel=null;got++;sc();
+      if(got===parts.length){const st=starsFor(miss);award('label',st);say('label',`Tooth fully labelled! ${'★'.repeat(st)}`)}}
+    else{miss++;flash(sel);dot.classList.add('badd');setTimeout(()=>dot.classList.remove('badd'),450)}};
+  $('#label-words').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;if(sel)sel.classList.remove('sel');sel=b;b.classList.add('sel')};
+  $('#spots').onclick=e=>{const d=e.target.closest('.dot');if(!d||d.classList.contains('done'))return;if(!sel){say('label','Pick a word first, then click its number.',true);return}place(d)};
+  $('#spots').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const d=e.target.closest('.dot');if(d&&sel&&!d.classList.contains('done')){e.preventDefault();place(d)}}};
+}
+
+/* ordering games */
+function orderGame(key,listEl,steps,doneMsg){
+  let tries=0,items;
+  do{items=shuffle(steps.map((s,i)=>i))}while(items.every((v,i)=>v===i));
+  const draw=()=>{listEl.innerHTML=items.map((i,p)=>`<li data-i="${i}"><span>${steps[i]}</span><button aria-label="Move up" data-m="-1" data-p="${p}" ${p?'':'disabled'}>↑</button><button aria-label="Move down" data-m="1" data-p="${p}" ${p<items.length-1?'':'disabled'}>↓</button></li>`).join('')};
+  draw();hush(key);$('#s-'+key).textContent='';
+  listEl.onclick=e=>{const b=e.target.closest('button');if(!b)return;const p=+b.dataset.p,q=p+(+b.dataset.m);[items[p],items[q]]=[items[q],items[p]];draw();hush(key);
+    const f=listEl.querySelectorAll('li')[q].querySelector(`[data-m="${b.dataset.m}"]`);if(f&&!f.disabled)f.focus()};
+  return ()=>{tries++;let right=0;listEl.querySelectorAll('li').forEach((li,p)=>{const ok=+li.dataset.i===p;li.className=ok?'ok':'no';if(ok)right++});
+    $('#s-'+key).textContent=right+' / '+steps.length+' in place';
+    if(right===steps.length){const st=tries===1?3:tries<=3?2:1;award(key,st);say(key,doneMsg+` ${'★'.repeat(st)}`)}
+    else say(key,'Green ones are in the right place. Move the red ones and check again.',true)};
+}
+const cavitySteps=['Sugary food and drink are left on the teeth after eating.','Bacteria in plaque (a sticky film on teeth) feed on the sugar.','The bacteria turn the sugar into acid.','The acid slowly dissolves the hard enamel, making a tiny hole.','If the tooth is not cleaned, the hole grows through the dentine.','The hole (cavity) reaches the pulp and nerve, causing toothache.'];
+const journeySteps=['Mouth','Oesophagus','Stomach','Small intestine','Large intestine','Rectum','Anus'];
+let cavityCheck,journeyCheck;
+const cavityGame=()=>{cavityCheck=orderGame('cavity',$('#cavity-list'),cavitySteps,'Perfect order! Brushing twice a day and cutting down on sugar stops this happening.')};
+const journeyGame=()=>{journeyCheck=orderGame('journey',$('#journey-list'),journeySteps,'You got the food all the way through!')};
+$('#cavity-check').onclick=()=>cavityCheck();$('#journey-check').onclick=()=>journeyCheck();
+
+/* 5 digestive match */
+const gut={'Mouth':'Teeth break food into small pieces and saliva makes it soft and wet to swallow','Oesophagus':'A muscly tube (food pipe) that squeezes food down to the stomach','Stomach':'Churns food and mixes it with acid and juices to break it down','Small intestine':'A very long tube where nutrients pass into the blood','Large intestine':'Takes water out of the leftover food','Rectum':'Stores the waste until you go to the toilet','Anus':'The ring of muscle where waste (faeces) leaves the body'};
+const organId={'Mouth':'mouth','Oesophagus':'oesophagus','Stomach':'stomach','Small intestine':'small','Large intestine':'large','Rectum':'rectum','Anus':'anus'};
+const hl=k=>{const svg=$('#body');svg.classList.add('has-hl');svg.querySelectorAll('.organ').forEach(o=>o.classList.toggle('hl',o.id==='o-'+organId[k]))};
+const gutGame=()=>{$('#body').classList.remove('has-hl');matcher('gut',$('#gut-l'),$('#gut-r'),gut,hl,'Super digestion detective!')};
+
+/* 7 quiz */
+const Q=[['Which teeth are sharp and pointed for tearing food?',['Canines','Molars','Incisors','Premolars'],'Canines are the pointed teeth either side of your incisors.'],
+['Which teeth are large and flat for grinding food?',['Molars','Canines','Incisors','Milk teeth'],'Molars sit at the back of the mouth and grind food up.'],
+['Which teeth at the front are used for biting and cutting?',['Incisors','Molars','Premolars','Canines'],'Incisors are chisel-shaped, like little blades.'],
+['An animal that eats only plants is called a…',['Herbivore','Carnivore','Omnivore','Predator'],'Herbi- means plants, like herbs.'],
+['Humans eat plants and meat. This makes us…',['Omnivores','Herbivores','Carnivores','Producers'],'Omni- means all.'],
+['What is the hardest substance in the human body?',['Tooth enamel','Bone','Dentine','Fingernails'],'Enamel is even harder than bone, but acid can still dissolve it.'],
+['Which part of the tooth has nerves and blood vessels?',['Pulp','Enamel','Crown','Dentine'],'The pulp is the soft centre of the tooth.'],
+['What do bacteria in plaque make when they feed on sugar?',['Acid','Saliva','Enamel','Water'],'The acid attacks enamel and causes cavities.'],
+['How many milk (baby) teeth do children have?',['20','32','12','28'],'Children have 20 milk teeth; adults have up to 32.'],
+['Where do most nutrients pass into the blood?',['Small intestine','Stomach','Large intestine','Oesophagus'],'The small intestine is about 6 metres long, perfect for absorbing nutrients.'],
+['What is the oesophagus?',['The tube from the mouth to the stomach','The bag that churns food','Where water is absorbed','Where waste is stored'],'It is also called the food pipe.'],
+['Where is water taken out of the leftover food?',['Large intestine','Small intestine','Mouth','Stomach'],'The large intestine absorbs water so waste becomes more solid.'],
+['What does saliva do?',['Makes food soft and wet so it is easy to swallow','Grinds food','Kills all the bacteria in your mouth','Absorbs nutrients'],'Saliva also starts breaking food down.'],
+['Which is the best way to stop cavities forming?',['Brush twice a day and have less sugar','Brush once a week','Eat sweets between meals','Only drink fizzy drinks'],'Brushing removes plaque; less sugar means less acid.'],
+['Herbivores like cows have lots of which teeth?',['Wide, flat molars for grinding plants','Long, sharp canines','No teeth at all','Only incisors'],'Grinding tough grass needs big flat molars.']];
+let qs,qi,qscore;
+function quizGame(){qs=shuffle(Q).slice(0,10);qi=0;qscore=0;askQ()}
+function askQ(){const [q,opts,why]=qs[qi];$('#qnext').hidden=true;$('#s-quiz').textContent=qscore+' / '+qi;
+  $('#qcard').innerHTML=`<div class="qn">Question ${qi+1} of ${qs.length}</div><h3>${q}</h3><div class="opts">${shuffle(opts).map(o=>`<button>${o}</button>`).join('')}</div><div class="why" id="why"></div>`;
+  $('#qcard .opts').onclick=e=>{const b=e.target.closest('button');if(!b)return;const all=[...$('#qcard .opts').children];all.forEach(x=>{x.disabled=true;if(x.textContent===opts[0])x.classList.add('right')});
+    const ok=b.textContent===opts[0];if(ok)qscore++;else b.classList.add('wrong');
+    $('#why').innerHTML=(ok?'<b>Correct!</b> ':'<b>Not quite.</b> ')+why;$('#s-quiz').textContent=qscore+' / '+(qi+1);
+    if(qi<qs.length-1){$('#qnext').hidden=false;$('#qnext').focus()}else{const st=qscore>=9?3:qscore>=6?2:1;award('quiz',st);$('#why').innerHTML+=`<br><br><b>Final score: ${qscore} out of ${qs.length}</b> ${'★'.repeat(st)}`}}}
+$('#qnext').onclick=()=>{qi++;askQ()};
+
+const start={teeth:teethGame,sort:sortGame,label:labelGame,cavity:cavityGame,gut:gutGame,journey:journeyGame,quiz:quizGame};
+document.addEventListener('click',e=>{const r=e.target.closest('[data-reset]');if(r){start[r.dataset.reset]()}});
+Object.values(start).forEach(f=>f());
+fromHash();
+}
+</script>
+</body>
+</html>
